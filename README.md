@@ -8,7 +8,7 @@ This workspace contains small public-facing test frontends.
 	- Username: `DemoUser101`
 	- Email: `DemoEmail@jvm.place`
 	- Password: `1234`
-	- DB id: `Y4L_-KPk_ho`
+	- DB id: `-` (test is currently unfortunatly offline)
 
 Please don't modify the demo user — it's kept so others can test the system.
 
