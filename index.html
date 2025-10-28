@@ -3,19 +3,69 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#0b66c3" />
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
   <title>Public Tests</title>
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial; margin: 28px; color:#111 }
+    :root {
+      --bg: #0a0a0a;
+      --fg: #111;
+      --text: #1b1b1b;
+      --muted: #606c76;
+      --card: #fff;
+      --border: #e9e9ef;
+      --link: #0b66c3;
+      --link-hover: #094f98;
+      --chip: #f2f7ff;
+    }
+    * { box-sizing: border-box }
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Color Emoji";
+      margin: 28px;
+      color: var(--text);
+      background: #fbfbfd;
+      line-height: 1.45;
+    }
     header { margin-bottom: 18px }
-    h1 { margin: 0 0 6px 0 }
-    p.lead { margin: 0 0 18px 0; color:#444 }
-    ul.tests { list-style: none; padding:0; margin:0 }
-    ul.tests li { margin: 10px 0; padding: 12px; border: 1px solid #e6e6e6; border-radius:8px; background:#fafafa }
-    a.project { font-weight:600; color:#0b66c3; text-decoration:none }
-    a.project:hover { text-decoration:underline }
-    .meta { color:#666; font-size:0.95rem; margin-top:6px }
-    footer { margin-top:30px; color:#666; font-size:0.9rem }
+    h1 { margin: 0 0 6px 0; font-size: 1.75rem }
+    p.lead { margin: 0 0 18px 0; color: var(--muted) }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 12px;
+      padding: 0;
+      list-style: none;
+      margin: 0;
+    }
+    .card {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 14px 14px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--card);
+      box-shadow: 0 1px 0 rgba(0,0,0,0.02);
+    }
+    .title-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .emoji {
+      font-size: 1.25rem;
+      line-height: 1;
+    }
+    a.project {
+      font-weight: 600;
+      color: var(--link);
+      text-decoration: none;
+    }
+    a.project:hover { color: var(--link-hover); text-decoration: underline }
+    .meta { color: var(--muted); font-size: 0.95rem }
+    footer { margin-top: 30px; color: var(--muted); font-size: 0.9rem }
     code { background:#f3f3f3; padding:2px 6px; border-radius:4px }
+    .chip { display:inline-block; padding:2px 8px; border-radius:999px; background:var(--chip); color:#2455a6; font-size:0.8rem }
   </style>
 </head>
 <body>
@@ -25,12 +75,20 @@
   </header>
 
   <main>
-    <ul class="tests">
-      <li>
-        <div>
-          <a class="project" href="JVM-Authorization-Tool/index.html" target="_blank" rel="noopener">Full Test Console</a>
+    <ul class="grid">
+      <li class="card">
+        <div class="title-row">
+          <span class="emoji" aria-hidden="true">🔐</span>
+          <a class="project" href="JVM-Authorization-Tool/index.html" target="_blank" rel="noopener">JVM Authorization Tool</a>
         </div>
-        <div class="meta">Interactive demo console for the JVM Authorization Tool. (folder: <code>JVM-Authorization-Tool</code>)</div>
+        <div class="meta">A small web UI for testing JVM authorization rules and token flows. <span class="chip">folder: <code>JVM-Authorization-Tool</code></span></div>
+      </li>
+      <li class="card">
+        <div class="title-row">
+          <span class="emoji" aria-hidden="true">📦</span>
+          <a class="project" href="example-project/index.html" target="_blank" rel="noopener">Example Project (Front Matter)</a>
+        </div>
+        <div class="meta">Minimal example using description.md front matter options. <span class="chip">folder: <code>example-project</code></span></div>
       </li>
 
     </ul>
