@@ -333,10 +333,13 @@
   <div id="output"><pre>Responses will appear here...</pre></div>
 
 
+  <!-- Load external configuration (API base URL, etc.) -->
+  <script src="config.js"></script>
 
 <script>
 // ==== Config ====
-const apiBase = "https://didactic-space-palm-tree-v6gw94rjqw6p3wp5v-5000.app.github.dev/"; // change if needed
+// Prefer apiBase from global APP_CONFIG, fall back to default if missing
+const apiBase = (window.APP_CONFIG && window.APP_CONFIG.apiBase) || "https://didactic-space-palm-tree-v6gw94rjqw6p3wp5v-5000.app.github.dev/";
 
 // ==== Helpers ====
 function formatTime(date) { return date.toLocaleString(); }
