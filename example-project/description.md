@@ -1,7 +1,7 @@
 ---
 title: Example Project (Front Matter)
-emoji:
-order: 2
+emoji: 🗎
+order: 999
 description: Minimal example using description.md front matter options.
 # hidden: true    # uncomment to hide from the list
 # href: ./index.html  # optional: override link target

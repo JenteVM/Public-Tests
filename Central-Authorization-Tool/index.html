@@ -14,43 +14,70 @@
   <meta http-equiv="Expires" content="0"/>
   <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
   <style>
+    :root {
+      --bg: #f6f4f1;
+      --text: #1f2328;
+      --muted: #5b6168;
+      --card: #ffffff;
+      --accent: #0b66c3;
+      --accent-hover: #094f98;
+      --border: rgba(0,0,0,0.08);
+      --shadow: 0 20px 50px rgba(17, 24, 39, 0.12);
+    }
+    * { box-sizing: border-box; }
     body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-      line-height: 1.5;
-      background-color: #ffffff;
-      color: #000000;
+      font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif;
+      margin: 0;
+      padding: 28px 32px 48px;
+      line-height: 1.55;
+      background: radial-gradient(circle at top, #ffffff 0%, #f6f4f1 45%, #efe8df 100%);
+      color: var(--text);
       transition: background 0.3s, color 0.3s;
     }
     form, .panel {
-      border: 1px solid #ddd;
-      padding: 14px 16px;
+      border: 1px solid var(--border);
+      padding: 16px 18px;
       margin-bottom: 20px;
-      border-radius: 10px;
-      background: #f9f9f9;
+      border-radius: 18px;
+      background: var(--card);
       transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      box-shadow: var(--shadow);
     }
     h1, h2, h3 {
       margin-top: 0;
     }
     label {
-      font-weight: bold;
+      font-weight: 600;
     }
     input, select {
       margin-bottom: 10px;
       width: 100%;
-      padding: 6px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #ffffff;
+      font-family: inherit;
     }
     button {
       cursor: pointer;
+      padding: 8px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(11, 102, 195, 0.3);
+      background: var(--accent);
+      color: #ffffff;
+      font-weight: 600;
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+    button:hover {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
     }
     .section {
       margin-bottom: 25px;
     }
   /* userSection visibility controlled via JS; no default display block */
     details.panel {
-      background: #f9f9f9;
+      background: var(--card);
       padding: 0;
       overflow: hidden;
     }
@@ -63,17 +90,17 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      background: linear-gradient(145deg,#fcfcfc,#f0f0f0);
-      border-bottom: 1px solid #e2e2e2;
+      background: rgba(11, 102, 195, 0.08);
+      border-bottom: 1px solid var(--border);
     }
     details.panel[open] summary {
-      background: linear-gradient(145deg,#f3f3f3,#e7e7e7);
+      background: rgba(11, 102, 195, 0.12);
     }
     details.panel summary::-webkit-details-marker { display:none; }
     details.panel .content { padding: 16px 16px 10px; }
     details.panel .content h3:first-child { margin-top:0; }
     .badge {
-      display:inline-block; padding:2px 8px; border-radius:20px; font-size:11px; background:#ddd; font-weight:600;
+      display:inline-block; padding:2px 8px; border-radius:20px; font-size:11px; background: rgba(11, 102, 195, 0.2); font-weight:600; color: var(--accent);
     }
     body.dark .badge { background:#444; }
     .token-masked { font-family: monospace; letter-spacing: 1px; }
@@ -104,7 +131,7 @@
     #authStatus {
       padding: 10px;
       font-weight: bold;
-      border-radius: 6px;
+      border-radius: 12px;
       margin-bottom: 20px;
     }
     #authStatus.not-auth {
@@ -137,14 +164,14 @@
     body.dark .danger:hover { background:#a11919; }
     #logoutBtn, #validateBtn, #copyBtn, #darkModeBtn {
       margin-left: 10px;
-      padding: 5px 10px;
+      padding: 6px 12px;
     }
     #output {
       margin-top: 20px;
       padding: 10px;
-      border: 1px solid #ddd;
-      background: #fafafa;
-      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: #ffffff;
+      border-radius: 12px;
       max-height: 400px;
       overflow-y: auto;
       transition: background 0.3s, border-color 0.3s;
@@ -157,7 +184,7 @@
 
   /* ---- DARK MODE ---- */
     body.dark {
-      background-color: #1e1e1e;
+      background: #1e1e1e;
       color: #e0e0e0;
     }
     body.dark input, body.dark select, body.dark button {
