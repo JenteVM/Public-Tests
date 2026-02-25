@@ -110,10 +110,11 @@
     details.panel .content {
       max-height: 0;
       overflow: hidden;
-      transition: max-height 0.45s ease;
+      transition: max-height 0.35s ease;
     }
     details.panel[open] .content {
-      max-height: 1200px; /* sufficiently large for content */
+      max-height: 2000px; /* allow taller content so fields/buttons aren't clipped */
+      overflow: visible;
     }
     .validate-busy {
       opacity: 0.6;
@@ -126,6 +127,17 @@
     #authForm.fade-out { opacity:0; transition: opacity 0.4s ease; }
     #authForm[hidden] { display:none !important; }
     .meta-line { font-size:12px; opacity:0.85; margin-top:4px; }
+    /* Registry PATCH form layout improvements */
+    .registry-patch { display:flex; flex-direction:column; gap:10px; margin-top:8px; }
+    .registry-patch .row { display:flex; flex-direction:column; gap:6px; }
+    .registry-patch input[type="text"], .registry-patch textarea { width:100%; padding:8px 10px; border-radius:10px; border:1px solid var(--border); background: var(--card); color: var(--text); }
+    .registry-patch textarea { resize:vertical; min-height:72px; }
+    /* reduce transitions in patch area to avoid layout jitter */
+    .registry-patch input[type="text"], .registry-patch textarea { transition: none; }
+    .registry-patch input[type="text"]:focus, .registry-patch textarea:focus { outline: none; box-shadow: 0 6px 18px rgba(11,102,195,0.04); border-color: rgba(11,102,195,0.22); }
+    .registry-patch label { font-weight:600; }
+    .registry-patch .checkbox-row { display:flex; align-items:center; gap:8px; }
+    .registry-patch button { align-self:flex-start; margin-top:6px; }
     .inline-small { font-size:12px; }
     /* authStatus container basic styling */
     #authStatus {
@@ -219,6 +231,16 @@
       background-color: #2b5c2b;
       color: #aaffaa;
     }
+    /* Dark mode adjustments for registry patch area */
+    body.dark .registry-patch input[type="text"], body.dark .registry-patch textarea {
+      background: #2f2f2f;
+      color: #e0e0e0;
+      border-color: #555;
+    }
+    body.dark .registry-patch .meta-line { color: #bbb; }
+    @media (max-width: 700px) {
+      .registry-patch button { width: 100%; }
+    }
   /* authForm visibility controlled via JS (fade-out + hidden) */
   </style>
 </head>
@@ -264,6 +286,56 @@
         <label>Registry Token:</label>
         <input id="registryToken" type="text" placeholder="token" />
         <button id="authRegistryBtn" type="button">Authenticate Registry</button>
+        <hr>
+        <h3>Update Registry (PATCH)</h3>
+        <div class="registry-patch">
+          <div class="row">
+            <label for="patchDbId">Database ID:</label>
+            <input id="patchDbId" type="text" placeholder="db id to patch" />
+          </div>
+          <div class="row">
+            <label for="patchAppName">App Name (optional):</label>
+            <input id="patchAppName" type="text" placeholder="new app name (optional)" />
+          </div>
+          <div class="row">
+            <label for="patchAuthScheme">User Auth Scheme (JSON string):</label>
+            <div style="display:flex;gap:8px;align-items:flex-start;">
+              <textarea id="patchAuthScheme" rows="4" placeholder='e.g. {"notation":"integer",...}' style="flex:1"></textarea>
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <select id="authSchemeExamples" class="inline-small" aria-label="Auth scheme examples" style="min-width:180px">
+                  <option value="">— Select example —</option>
+                  <option value='{"central_authorization_tool":{"notation":"integer","allow_key":{"else":{"smaller_than":null,"bigger_than":"16","allow":["12"],"ban":["20"]}},"hierarchy":{"main":"bigger_than","except":["1"]}}}'>Simple (integer)</option>
+                  <option value='{"central_authorization_tool":{"notation":"string","translation_key":{"user":"0","admin":"1","special":"5","someone_else":"10"},"allow_key":{"registry_get_all":{"smaller_than":"5","bigger_than":null,"allow":["5"],"ban":null},"else":{"smaller_than":null,"bigger_than":null,"allow":["someone_else"],"ban":["special"]}},"hierarchy":{"main":"smaller_than","except":["special"]}}}'>Simple (string)</option>
+                  <option value='{"central_authorization_tool":{"notation":"integer","allow_key":{"else":{"smaller_than":null,"bigger_than":null,"allow":["5"],"ban":null}},"hierarchy":{"main":"advanced","advanced":{"else":{"5":{"bigger_than":"1","smaller_than":null,"allow":["2","3"],"ban":[]}}},"except":["0"]}}}'>Advanced (integer)</option>
+                </select>
+                <button type="button" class="inline-small" id="clearAuthScheme">Clear</button>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <label for="patchTranslation">Translation (JSON object mapping old-&gt;new; keys/values may be numbers or strings, optional):</label>
+            <div style="display:flex;gap:8px;align-items:flex-start;">
+              <textarea id="patchTranslation" rows="3" placeholder='e.g. {"5":"10","admin":"superadmin","3":"guest","member":"1"}' style="flex:1"></textarea>
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <select id="translationExamples" class="inline-small" aria-label="Translation examples" style="min-width:180px">
+                  <option value="">— Select example —</option>
+                  <option value='{"5":"10","1":"2"}'>int->int</option>
+                  <option value='{"guest":"visitor","admin":"superadmin"}'>str->str</option>
+                  <option value='{"3":"guest","2":"member"}'>int->str</option>
+                  <option value='{"member":"1","moderator":"2"}'>str->int</option>
+                  <option value='{"5":"10","guest":"visitor","3":"guest","member":"1"}'>Mixed advanced</option>
+                </select>
+                <button type="button" class="inline-small" id="clearTranslation">Clear</button>
+              </div>
+            </div>
+          </div>
+          <div class="row checkbox-row">
+            <input id="patchAuthorized" type="checkbox">
+            <label for="patchAuthorized">Authorized (check to set authorized=true)</label>
+          </div>
+          <div class="meta-line">Note: `user_auth_scheme` is optional; if provided, give it as a JSON string. Translation should be a JSON object mapping old-&gt;new auth levels. Keys and values must be strings (quote numeric values), the server will handle coercion. Examples: int-&gt;int: {"5":"10"}, str-&gt;str: {"guest":"visitor"}, int-&gt;str: {"3":"guest"}, str-&gt;int: {"member":"1"}.</div>
+          <button id="patchRegistryBtn" type="button">Patch Registry</button>
+        </div>
       </div>
     </div>
   </details>
@@ -465,13 +537,13 @@ function updateAuthStatus() {
       }
     }
     let html = `🟠 Rate Limited`+
-      `<div class='status-line'>Token: <span class='token-masked'>${escapeHtml(masked)}</span>`+
-      `<span class='inline-controls'>`+
-      `<button id='copyBtn' type='button' onclick='copyToken()'>📋 Copy</button>`+
-      `<button id='maskToggleBtn' type='button' onclick='toggleMask()'>${localStorage.getItem('maskToken')==='1'?'👁️ Show':'🙈 Mask'}</button>`+
-      `</span></div>`+
-      `<div class='status-line'>DB: ${escapeHtml(dbId || '—')} <button id='logoutBtn' type='button' onclick='logout()'>Logout</button>`+
-      `<button id='validateBtn' type='button' disabled>Validate Token</button></div>`+
+    `<div class='status-line'>Token: <span class='token-masked'>${escapeHtml(masked)}</span>`+
+    `<span class='inline-controls'>`+
+    `<button id='copyBtn' type='button' onclick='copyToken()'>📋 Copy</button>`+
+    `<button id='maskToggleBtn' type='button' onclick='toggleMask()'>${localStorage.getItem('maskToken')==='1'?'👁️ Show':'🙈 Mask'}</button>`+
+    `</span></div>`+
+    `<div class='status-line'>DB: ${escapeHtml(dbId || '—')} <button id='logoutBtn' type='button' onclick='logout(true)'>Logout</button>`+
+    `<button id='validateBtn' type='button' disabled>Validate Token</button></div>`+
       (userId? `<br>User ID: ${escapeHtml(userId)}` : '') +
       (userRole? `<br>Role: ${escapeHtml(userRole)}` : '') +
       (lastDisplay? `<br><i>Last validated: ${lastDisplay}${since}</i>` : '') +
@@ -520,7 +592,7 @@ function updateAuthStatus() {
       `<button id='copyBtn' type='button' onclick='copyToken()'>📋 Copy</button>`+
       `<button id='maskToggleBtn' type='button' onclick='toggleMask()'>${localStorage.getItem('maskToken')==='1'?'👁️ Show':'🙈 Mask'}</button>`+
       `</span></div>`+
-      `<div class='status-line'>DB: ${escapeHtml(dbId)} <button id='logoutBtn' type='button' onclick='logout()'>Logout</button>`+
+      `<div class='status-line'>DB: ${escapeHtml(dbId)} <button id='logoutBtn' type='button' onclick='logout(true)'>Logout</button>`+
       `<button id='validateBtn' type='button' onclick='validateToken()'>Validate Token</button></div>`;
     if (userId) html += `<br>User ID: ${escapeHtml(userId)}`;
     if (userRole) html += `<br>Role: ${escapeHtml(userRole)}`;
@@ -549,7 +621,7 @@ function updateAuthStatus() {
   }
 }
 
-function logout() {
+function logout(announce) {
   ["authToken","lastDbId","lastValidated","userId","userRole"].forEach(k=>localStorage.removeItem(k));
   window._showUnauthMsg = true;
   // Force show auth form immediately
@@ -564,7 +636,7 @@ function logout() {
   try { delete window._rateLimitAnnounced; } catch(e) { window._rateLimitAnnounced = false; }
   // Update UI now
   updateAuthStatus();
-  showOutput("Logout", {status:"ok"});
+  if (announce) showOutput("Logout", {status:"ok"});
 }
 function copyToken() {
   const token = localStorage.getItem("authToken");
@@ -779,7 +851,7 @@ async function validateToken() {
 
   // perform validation and always clear spinner/busy state afterwards
   try {
-    const url = `${apiBase}api/${dbId}/users/authenticate/curr/2/`;
+    const url = `${apiBase}api/${dbId}/users/authenticate/curr/5/`;
     const userId = localStorage.getItem("userId") || "";
     const res = await authFetch(url, {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({user_id: userId})});
     let data = null; try { data = await res.json(); } catch(e){ data={error:"Invalid JSON"}; }
@@ -862,7 +934,13 @@ async function sendUserRequest(e) {
         let bodyText = null; try { bodyText = await res.clone().text(); } catch(e){}
         setRateLimitCooldown(res, bodyText || undefined);
         showOutput("Rate Limit", {error:"Too Many Requests"}); updateAuthStatus(); return false; }
-      if (res.status === 401 || res.status === 403) { logout(); return; }
+      if (res.status === 401 || res.status === 403) {
+        let data = null;
+        try { data = await res.json(); } catch(e) { try { const t = await res.clone().text(); data = {error: t}; } catch(_) { data = {error: `HTTP ${res.status}`}; } }
+        showOutput("Unauthorized", data);
+        logout();
+        return;
+      }
       const data = await res.json(); showOutput("User Created", data); resetUserForm(); return false;
     }
     if (requestType === "DELETE") {
@@ -883,7 +961,13 @@ async function sendUserRequest(e) {
         let bodyText = null; try { bodyText = await res.clone().text(); } catch(e){}
         setRateLimitCooldown(res, bodyText || undefined);
         showOutput("Rate Limit", {error:"Too Many Requests"}); updateAuthStatus(); return false; }
-      if (res.status === 401 || res.status === 403) { logout(); return; }
+      if (res.status === 401 || res.status === 403) {
+        let data = null;
+        try { data = await res.json(); } catch(e) { try { const t = await res.clone().text(); data = {error: t}; } catch(_) { data = {error: `HTTP ${res.status}`}; } }
+        showOutput("Unauthorized", data);
+        logout();
+        return;
+      }
       const data = await res.json(); showOutput("User Deleted", data); resetUserForm(); return false;
     }
     if (requestType === "PATCH") {
@@ -904,7 +988,13 @@ async function sendUserRequest(e) {
         let bodyText = null; try { bodyText = await res.clone().text(); } catch(e){}
         setRateLimitCooldown(res, bodyText || undefined);
         showOutput("Rate Limit", {error:"Too Many Requests"}); updateAuthStatus(); return false; }
-      if (res.status === 401 || res.status === 403) { logout(); return; }
+      if (res.status === 401 || res.status === 403) {
+        let data = null;
+        try { data = await res.json(); } catch(e) { try { const t = await res.clone().text(); data = {error: t}; } catch(_) { data = {error: `HTTP ${res.status}`}; } }
+        showOutput("Unauthorized", data);
+        logout();
+        return;
+      }
       const data = await res.json(); showOutput("User Updated", data); resetUserForm(); return false;
     }
     if (requestType === "GET") {
@@ -914,7 +1004,13 @@ async function sendUserRequest(e) {
         let bodyText = null; try { bodyText = await res.clone().text(); } catch(e){}
         setRateLimitCooldown(res, bodyText || undefined);
         showOutput("Rate Limit", {error:"Too Many Requests"}); updateAuthStatus(); return false; }
-      if (res.status === 401 || res.status === 403) { logout(); return; }
+      if (res.status === 401 || res.status === 403) {
+        let data = null;
+        try { data = await res.json(); } catch(e) { try { const t = await res.clone().text(); data = {error: t}; } catch(_) { data = {error: `HTTP ${res.status}`}; } }
+        showOutput("Unauthorized", data);
+        logout();
+        return;
+      }
       const data = await res.json(); showOutput("GET Result", data); return false;
     }
   } catch(err) { showOutput("User Request Error", {error: err+""}); }
@@ -980,7 +1076,13 @@ async function deleteOwnAccount(){
   try {
     const res = await authFetch(`${apiBase}api/${dbId}/users/id/${userId}/`, {method:'DELETE'});
     if (res.status === 429) { let bodyText = null; try { bodyText = await res.clone().text(); } catch(e){} setRateLimitCooldown(res, bodyText || undefined); showOutput('Rate Limit', {error:'Too Many Requests'}); return; }
-    if (res.status === 401 || res.status === 403) { logout(); return; }
+    if (res.status === 401 || res.status === 403) {
+      let data = null;
+      try { data = await res.json(); } catch(e) { try { const t = await res.clone().text(); data = {error: t}; } catch(_) { data = {error: `HTTP ${res.status}`}; } }
+      showOutput('Unauthorized', data);
+      logout();
+      return;
+    }
     let data=null; try { data = await res.json(); } catch(e){ data={error:'Invalid JSON'}; }
     showOutput('Self Delete Result', data);
     if (res.ok) {
@@ -1067,6 +1169,77 @@ async function authenticateRegistry(){
   } catch(err){ showOutput('Registry Auth Error', {error: err+''}); }
 }
 
+async function patchRegistry(){
+  const dbId = document.getElementById('patchDbId').value.trim();
+  if(!dbId) return showOutput('Registry Patch Error', {error:'Database ID required.'});
+  const appName = document.getElementById('patchAppName').value.trim();
+  const authSchemeRaw = document.getElementById('patchAuthScheme').value.trim();
+  const translationRaw = document.getElementById('patchTranslation').value.trim();
+  const authorized = document.getElementById('patchAuthorized').checked;
+  const payload = {};
+  if(appName) payload.app_name = appName;
+  if(authSchemeRaw) {
+    // send as string (server expects a string arg for user_auth_scheme)
+    payload.user_auth_scheme = authSchemeRaw;
+  }
+  if(translationRaw) {
+    // send translation as a JSON string; backend will attempt to parse it
+    try {
+      // allow user to enter either object or string; normalize to JSON string
+      const parsed = JSON.parse(translationRaw);
+      payload.translation = JSON.stringify(parsed);
+    } catch(e) {
+      // if not valid JSON, send raw input (server may accept)
+      payload.translation = translationRaw;
+    }
+  }
+  // Only include authorized when checkbox is meaningful; send boolean
+  payload.authorized = authorized;
+
+  try {
+    const headers = {'Content-Type':'application/json'};
+    // Ensure db-id header is provided (authFetch auto-injects based on URL when possible)
+    const res = await authFetch(`${apiBase}api/registry/${dbId}/`, {method:'PATCH', headers, body: JSON.stringify(payload)});
+    if (res.status === 429) { let bodyText = null; try { bodyText = await res.clone().text(); } catch(e){} setRateLimitCooldown(res, bodyText || undefined); showOutput('Rate Limit', {error:'Too Many Requests'}); updateAuthStatus(); return; }
+    if (res.status === 401 || res.status === 403) {
+      let data = null;
+      try { data = await res.json(); } catch(e) { try { const t = await res.clone().text(); data = {error: t}; } catch(_) { data = {error: `HTTP ${res.status}`}; } }
+      showOutput('Unauthorized', data);
+      logout();
+      return;
+    }
+    let data = null; try { data = await res.json(); } catch(e){ data = {error:'Invalid JSON'}; }
+    showOutput('Registry Patch Result', data);
+  } catch(err) { showOutput('Registry Patch Error', {error: err+''}); }
+}
+
+function applyAuthSchemeExample(){
+  const sel = document.getElementById('authSchemeExamples');
+  if (!sel) return;
+  const v = sel.value;
+  if (!v) return;
+  try {
+    const parsed = JSON.parse(v);
+    document.getElementById('patchAuthScheme').value = JSON.stringify(parsed, null, 2);
+  } catch(e) {
+    document.getElementById('patchAuthScheme').value = v;
+  }
+}
+function applyTranslationExample(){
+  const sel = document.getElementById('translationExamples');
+  if (!sel) return;
+  const v = sel.value;
+  if (!v) return;
+  try {
+    const parsed = JSON.parse(v);
+    document.getElementById('patchTranslation').value = JSON.stringify(parsed, null, 2);
+  } catch(e) {
+    document.getElementById('patchTranslation').value = v;
+  }
+}
+function clearAuthScheme(){ document.getElementById('patchAuthScheme').value = ''; }
+function clearTranslation(){ document.getElementById('patchTranslation').value = ''; }
+
 // ==== Init ====
 
 // ==== Soft Auto Refresh ====
@@ -1139,6 +1312,15 @@ function scheduleSoftRefresh(){
       needRevalidate = true; // no timestamp yet
     }
     if (needRevalidate) {
+      // Only auto-validate if there has been user activity since the last validation
+      try {
+        const lastActivity = window._lastActivity || 0;
+        const lastValidatedTime = lastValidatedRaw ? new Date(lastValidatedRaw).getTime() : 0;
+        // If we have never seen activity or there has been no activity since last validation, delay the check
+        if (!lastActivity || (lastValidatedTime && lastActivity <= lastValidatedTime)) {
+          return;
+        }
+      } catch (e) {}
       validateToken();
     }
   }, 1000);
@@ -1173,11 +1355,21 @@ window.addEventListener("DOMContentLoaded", ()=>{
   const regCreate = document.getElementById('createRegistryBtn');
   const regLookup = document.getElementById('lookupRegistryBtn');
   const regAuth = document.getElementById('authRegistryBtn');
+  const regPatch = document.getElementById('patchRegistryBtn');
   if (authBtn) authBtn.addEventListener('click', authenticateUser);
   if (userBtn) userBtn.addEventListener('click', sendUserRequest);
   if (regCreate) regCreate.addEventListener('click', createRegistry);
   if (regLookup) regLookup.addEventListener('click', lookupRegistry);
   if (regAuth) regAuth.addEventListener('click', authenticateRegistry);
+  if (regPatch) regPatch.addEventListener('click', patchRegistry);
+  const authSelect = document.getElementById('authSchemeExamples');
+  const transSelect = document.getElementById('translationExamples');
+  const clearAuthBtn = document.getElementById('clearAuthScheme');
+  const clearTransBtn = document.getElementById('clearTranslation');
+  if (authSelect) authSelect.addEventListener('change', applyAuthSchemeExample);
+  if (transSelect) transSelect.addEventListener('change', applyTranslationExample);
+  if (clearAuthBtn) clearAuthBtn.addEventListener('click', clearAuthScheme);
+  if (clearTransBtn) clearTransBtn.addEventListener('click', clearTranslation);
   const select = document.getElementById("requestType");
   if (select) { select.addEventListener("change", updateUserFormVisibility); updateUserFormVisibility(); }
   const selfDel = document.getElementById('selfDeleteBtn');
@@ -1186,6 +1378,13 @@ window.addEventListener("DOMContentLoaded", ()=>{
   if (ident) ident.addEventListener('input', ()=>{
     if (document.getElementById('requestType').value === 'GET') updateUserFormVisibility();
   });
+  // track basic user activity for idle-aware soft refresh
+  try {
+    window._lastActivity = Date.now();
+    ['mousemove','keydown','click','scroll','touchstart','touchmove'].forEach(ev=>{
+      window.addEventListener(ev, ()=>{ window._lastActivity = Date.now(); }, {passive:true});
+    });
+  } catch(e){}
   // Prevent any <form> default submits from reloading the page
   window.addEventListener('submit', function(e){ e.preventDefault(); });
   // Auto validate token after 5 minutes (initial check)
