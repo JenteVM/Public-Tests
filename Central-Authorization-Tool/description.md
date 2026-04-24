@@ -6,3 +6,4 @@ description: Test frontend. Used to test (all) features given by the Central Aut
 ---
 
 Central Authorization Tool: The tool centrally authorizes someone so they can share their account (and login token) across origins and projects. The front end demos all that can be done to set up the tool.
+Login for testing: db_id: "SHl1ZToxQX0", username: "DemoUser101", password: "DemoPassword"
